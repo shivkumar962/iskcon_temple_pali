@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sparkles, Eye, EyeOff } from "lucide-react"
+import { Sparkles, Eye, EyeOff, Loader, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useMutation } from "@tanstack/react-query"
+import Authservice from "../../service/authService"
+import SignupSuccessModal from "@/components/models/signupSuccessModel"
 
 // Yup validation schema
 const SignupSchema = Yup.object().shape({
@@ -30,9 +33,13 @@ const SignupSchema = Yup.object().shape({
   phone: Yup.string()
     .matches(/^[\+]?[1-9][\d]{0,15}$/, "Invalid phone number")
     .required("Phone number is required"),
+  address: Yup.string()
+    .min(10, "Address must be at least 10 characters")
+    .max(100, "Address must be less than 100 characters")
+    .required("Address is required"),
   password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one uppercase letter, one lowercase letter, and one number")
+    .min(6, "Password must be at least 6 characters")
+    .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/, "Password must be at least 6 characters and contain only valid characters")
     .required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
@@ -40,17 +47,37 @@ const SignupSchema = Yup.object().shape({
   spiritualName: Yup.string()
     .max(100, "Spiritual name must be less than 100 characters")
     .required("Spiritual name is required"),
-  interests: Yup.string()
-    .required("Please select your spiritual interest"),
+  // interests: Yup.string()
+  //   .required("Please select your spiritual interest"),
   agreeToTerms: Yup.boolean()
     .oneOf([true], "You must agree to the terms and conditions")
     .required("You must agree to the terms and conditions"),
- 
+
 })
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSignupSuccess, setIsSignupSuccess] = useState(false)
+  const signupUser = async (userData: any) => {
+    const response = await Authservice.signup(userData)
+    return response
+  }
+
+  const signupMutation = useMutation({
+    mutationFn: (userData: any) => signupUser(userData),
+    onSuccess: (data: any) => {
+      console.log("Registration successful", data.data.message)
+      setIsSignupSuccess(true)
+      setTimeout(() => {
+        window.location.href = "/login"
+      }, 8000)
+    },
+    onError: (error: any) => {
+      console.log("Registration failed:", error)
+    },
+  })
+
 
   const formik = useFormik({
     initialValues: {
@@ -59,15 +86,14 @@ export default function SignupPage() {
       email: "",
       phone: "",
       password: "",
-      confirmPassword: "",
+      address: "",
       spiritualName: "",
       interests: "",
       agreeToTerms: false,
     },
     validationSchema: SignupSchema,
-    onSubmit: (values) => {
-      // Handle signup logic here
-      console.log("Signup attempt:", values)
+    onSubmit: (values: any) => {
+      signupMutation.mutate(values)
     },
   })
 
@@ -106,9 +132,8 @@ export default function SignupPage() {
                     value={formik.values.firstName}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                      formik.touched.firstName && formik.errors.firstName ? "border-red-500" : ""
-                    }`}
+                    className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.firstName && formik.errors.firstName ? "border-red-500" : ""
+                      }`}
                   />
                   <div className="text-red-500 text-sm h-4">
                     {formik.touched.firstName && formik.errors.firstName && (
@@ -127,9 +152,8 @@ export default function SignupPage() {
                     value={formik.values.lastName}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                      formik.touched.lastName && formik.errors.lastName ? "border-red-500" : ""
-                    }`}
+                    className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.lastName && formik.errors.lastName ? "border-red-500" : ""
+                      }`}
                   />
                   <div className="text-red-500 text-sm h-4">
                     {formik.touched.lastName && formik.errors.lastName && (
@@ -151,9 +175,8 @@ export default function SignupPage() {
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                    formik.touched.email && formik.errors.email ? "border-red-500" : ""
-                  }`}
+                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.email && formik.errors.email ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="text-red-500 text-sm h-4">
                   {formik.touched.email && formik.errors.email && (
@@ -174,9 +197,8 @@ export default function SignupPage() {
                   value={formik.values.phone}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                    formik.touched.phone && formik.errors.phone ? "border-red-500" : ""
-                  }`}
+                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.phone && formik.errors.phone ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="text-red-500 text-sm h-4">
                   {formik.touched.phone && formik.errors.phone && (
@@ -196,9 +218,8 @@ export default function SignupPage() {
                   value={formik.values.spiritualName}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                    formik.touched.spiritualName && formik.errors.spiritualName ? "border-red-500" : ""
-                  }`}
+                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.spiritualName && formik.errors.spiritualName ? "border-red-500" : ""
+                    }`}
                 />
                 <div className="text-red-500 text-sm h-4">
                   {formik.touched.spiritualName && formik.errors.spiritualName && (
@@ -207,17 +228,16 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* <div className="space-y-1">
                 <Label htmlFor="interests" className="text-orange-800 font-medium">
                   Spiritual Interests
                 </Label>
-                <Select 
+                <Select
                   onValueChange={(value) => formik.setFieldValue("interests", value)}
                   value={formik.values.interests}
                 >
-                  <SelectTrigger className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${
-                    formik.touched.interests && formik.errors.interests ? "border-red-500" : ""
-                  }`}>
+                  <SelectTrigger className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.interests && formik.errors.interests ? "border-red-500" : ""
+                    }`}>
                     <SelectValue placeholder="Select your primary interest" />
                   </SelectTrigger>
                   <SelectContent>
@@ -235,7 +255,30 @@ export default function SignupPage() {
                     <p className="text-red-500 text-sm">{formik.errors.interests}</p>
                   )}
                 </div>
+              </div> */}
+
+              <div className="space-y-1">
+                <Label htmlFor="address" className="text-orange-800 font-medium">
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  name="address"
+                  placeholder="Enter your address"
+                  value={formik.values.address}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 ${formik.touched.address && formik.errors.address ? "border-red-500" : ""
+                    }`}
+                />
+                <div className="text-red-500 text-sm h-4">
+                  {formik.touched.address && formik.errors.address && (
+                    <p className="text-red-500 text-sm">{formik.errors.address}</p>
+                  )}
+                </div>
               </div>
+
+
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -251,9 +294,8 @@ export default function SignupPage() {
                       value={formik.values.password}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 pr-10 ${
-                        formik.touched.password && formik.errors.password ? "border-red-500" : ""
-                      }`}
+                      className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 pr-10 ${formik.touched.password && formik.errors.password ? "border-red-500" : ""
+                        }`}
                     />
                     <button
                       type="button"
@@ -282,9 +324,8 @@ export default function SignupPage() {
                       value={formik.values.confirmPassword}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 pr-10 ${
-                        formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
-                      }`}
+                      className={`border-orange-200 focus:border-orange-400 focus:ring-orange-400 pr-10 ${formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
+                        }`}
                     />
                     <button
                       type="button"
@@ -323,18 +364,18 @@ export default function SignupPage() {
                   </Label>
                 </div>
                 <div className="text-red-500 text-sm h-4">
-                    {formik.touched.agreeToTerms && formik.errors.agreeToTerms && (
+                  {formik.touched.agreeToTerms && formik.errors.agreeToTerms && (
                     <p className="text-red-500 text-sm">{formik.errors.agreeToTerms}</p>
                   )}
                 </div>
-               
-              </div>
 
+              </div>
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-medium py-2.5"
-                disabled={!formik.values.agreeToTerms || formik.isSubmitting}
+                disabled={!formik.values.agreeToTerms || formik.isSubmitting || formik.isSubmitting || signupMutation.isPending}
               >
+                {formik.isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                 {formik.isSubmitting ? "Joining..." : "Join Our Community"}
               </Button>
             </form>
@@ -354,6 +395,7 @@ export default function SignupPage() {
           <p className="text-sm text-orange-600">🕉️ Welcome to the path of devotion and spiritual growth 🕉️</p>
         </div>
       </div>
+      <SignupSuccessModal open={isSignupSuccess} onClose={() => setIsSignupSuccess(false)} />
     </div>
   )
 }

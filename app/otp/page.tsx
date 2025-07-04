@@ -26,8 +26,8 @@ export default function VerifyPage() {
   const [countdown, setCountdown] = useState(0)
   const [isVerified, setIsVerified] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const email = searchParams.get('email')
+  // const searchParams = useSearchParams()
+  // const email = searchParams.get('email')
 
   // Countdown timer for resend functionality
   useEffect(() => {
@@ -186,11 +186,11 @@ export default function VerifyPage() {
             <CardDescription className="text-orange-700 text-base">
               We've sent a 6-digit verification code to
             </CardDescription>
-            {email && (
+            {/* {email && (
               <div className="bg-orange-50 px-4 py-2 rounded-lg">
                 <p className="text-orange-800 font-medium">{email}</p>
               </div>
-            )}
+            )} */}
             <div className="flex justify-center space-x-2">
               <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
               <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>

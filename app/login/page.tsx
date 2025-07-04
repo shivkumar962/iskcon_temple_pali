@@ -9,8 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Sparkles, Eye, EyeOff, Mail, Shield } from "lucide-react"
+import { Sparkles, Eye, EyeOff, Mail, Shield, Loader } from "lucide-react"
 import Link from "next/link"
+import Authservice from "@/service/authService"
+import { useMutation } from "@tanstack/react-query"
+import { useSelector } from "react-redux"
+import { toast } from "react-toastify"
+import { useRouter } from "next/navigation"
+
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Email is required"),
@@ -19,6 +25,31 @@ const validationSchema = Yup.object({
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter()
+  const user = useSelector((state: any) => state.user)
+  console.log("user", user)
+
+  const loginUser = async (userData: any) => {
+    const response = await Authservice.login(userData)
+    return response
+  }
+
+  const loginMutation = useMutation({
+    mutationFn: (userData: any) => loginUser(userData),
+    onSuccess: (data: any) => {
+      console.log("login successful22", data)
+      toast.success(data.data.message)
+      setTimeout(() => {
+        formik.resetForm()
+        router.push("/")
+      }, 8000)
+    },
+    onError: (error: any) => {
+      console.log("login failed:", error)
+      toast.error(error.response.data.message)
+      // formik.resetForm()
+    },
+  })
 
   const formik = useFormik({
     initialValues: {
@@ -29,6 +60,7 @@ export default function LoginPage() {
     validationSchema,
     onSubmit: (values) => {
       console.log("Login attempt:", values)
+      loginMutation.mutate(values)
     },
   })
 
@@ -146,11 +178,12 @@ export default function LoginPage() {
               </div>
 
               <Button
-                disabled={!formik.values.rememberMe  || formik.isSubmitting}
+                disabled={!formik.values.rememberMe  || formik.isSubmitting || loginMutation.isPending}
                 type="submit"
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
+                {formik.isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
                 {formik.isSubmitting ? "Signing in..." : "Sign In to Temple"}
               </Button>
             </form>

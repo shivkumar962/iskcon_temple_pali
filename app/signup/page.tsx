@@ -16,6 +16,10 @@ import Link from "next/link"
 import { useMutation } from "@tanstack/react-query"
 import Authservice from "../../service/authService"
 import SignupSuccessModal from "@/components/models/signupSuccessModel"
+import { login } from "@/store/slice/authSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { toast } from "react-toastify"
+import { useRouter } from "next/navigation"
 
 // Yup validation schema
 const SignupSchema = Yup.object().shape({
@@ -59,22 +63,32 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSignupSuccess, setIsSignupSuccess] = useState(false)
+  const dispatch = useDispatch()
+  const router = useRouter()
+  const user = useSelector((state: any) => state.user)
+  console.log("user", user)
+
   const signupUser = async (userData: any) => {
     const response = await Authservice.signup(userData)
+    console.log("response2222222222", response)
     return response
   }
 
   const signupMutation = useMutation({
     mutationFn: (userData: any) => signupUser(userData),
     onSuccess: (data: any) => {
-      console.log("Registration successful", data.data.message)
+      console.log("Registration successful", data)
       setIsSignupSuccess(true)
+      dispatch(login(data.data.data))
       setTimeout(() => {
-        window.location.href = "/login"
+        router.push("/login")
       }, 8000)
+      formik.resetForm()
     },
     onError: (error: any) => {
       console.log("Registration failed:", error)
+      toast.error(error.response.data.message)
+      formik.resetForm()
     },
   })
 

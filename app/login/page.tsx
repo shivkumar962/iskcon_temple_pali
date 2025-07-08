@@ -13,9 +13,10 @@ import { Sparkles, Eye, EyeOff, Mail, Shield, Loader } from "lucide-react"
 import Link from "next/link"
 import Authservice from "@/service/authService"
 import { useMutation } from "@tanstack/react-query"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { toast } from "react-toastify"
 import { useRouter } from "next/navigation"
+import { login } from "../../store/slice/authSlice"
 
 
 const validationSchema = Yup.object({
@@ -26,7 +27,8 @@ const validationSchema = Yup.object({
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-  const user = useSelector((state: any) => state.user)
+  const dispatch = useDispatch()
+  const user = useSelector((state: any) => state.auth.user)
   console.log("user", user)
 
   const loginUser = async (userData: any) => {
@@ -37,12 +39,13 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: (userData: any) => loginUser(userData),
     onSuccess: (data: any) => {
-      console.log("login successful22", data)
-      toast.success(data.data.message)
+      console.log("login successful22", data.data.data)
+      dispatch(login(data.data.data))
+      toast.success(data.data.data.message)
       setTimeout(() => {
         formik.resetForm()
         router.push("/")
-      }, 8000)
+      }, 3000)
     },
     onError: (error: any) => {
       console.log("login failed:", error)
